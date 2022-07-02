@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using Microsoft.Boogie.GraphUtil;
 
 namespace Microsoft.Boogie
@@ -17,6 +18,8 @@ namespace Microsoft.Boogie
       var functionNodes = program.Functions.Select(FunctionVisitor.GetDependencies);
       var constantNodes = program.Constants.Select(ConstantVisitor.GetDependencies);
       var nodes = axiomNodes.Concat(functionNodes).Concat(constantNodes).ToList();
+      
+      // Contract.Assert(!nodes.SelectMany(node => node.outgoing).Any(declaration => !program.TopLevelDeclarations.Contains(declaration)));
 
       var edges = new Dictionary<object, List<object>>();
       foreach (var node in nodes) {

@@ -1871,7 +1871,7 @@ namespace Microsoft.Boogie
     // that the parental situation is unconstrained.
     public readonly ReadOnlyCollection<ConstantParent /*!*/> Parents;
 
-    public IList<Axiom> DefinitionAxioms { get; }
+    public IList<Axiom> DefinitionAxioms { get; set; }
     
     [ContractInvariantMethod]
     void ObjectInvariant()

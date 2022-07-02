@@ -4,13 +4,34 @@ using System.Linq;
 
 namespace Microsoft.Boogie
 {
+
+  public class Reresolver : StandardVisitor
+  {
+    private Program? program;
+    public override Expr VisitNAryExpr(NAryExpr node)
+    {
+      if (node.Fun is FunctionCall)
+      {
+        node.Fun =
+          new FunctionCall(program.FindFunction(node.Fun.FunctionName));
+      }
+      return base.VisitNAryExpr(node);
+    }
+
+    public override Program VisitProgram(Program node)
+    {
+      program = node;
+      VisitDeclarationList(node.TopLevelDeclarations.ToList());
+      return node;
+    }
+  }
   public class Duplicator : StandardVisitor
   {
     // This is used to ensure that Procedures get duplicated only once
     // and that Implementation.Proc is resolved to the correct duplicated
     // Procedure.
     private Dictionary<Procedure, Procedure> OldToNewProcedureMap = null;
-    private Dictionary<Function, Function> OldToNewFunctionMap = null;
+    private Dictionary<Axiom, Axiom> OldToNewAxiomMap = null;
 
     public override Absy Visit(Absy node)
     {
@@ -69,7 +90,9 @@ namespace Microsoft.Boogie
     {
       //Contract.Requires(node != null);
       Contract.Ensures(Contract.Result<Axiom>() != null);
-      return base.VisitAxiom((Axiom) node.Clone());
+      var result = base.VisitAxiom((Axiom) node.Clone());
+      OldToNewAxiomMap[node] = result;
+      return result;
     }
 
     public override Type VisitBasicType(BasicType node)
@@ -299,21 +322,7 @@ namespace Microsoft.Boogie
     {
       //Contract.Requires(node != null);
       Contract.Ensures(Contract.Result<Function>() != null);
-      Function newFunction = null;
-      if (OldToNewFunctionMap != null && OldToNewFunctionMap.ContainsKey(node))
-      {
-        newFunction = OldToNewFunctionMap[node];
-      }
-      else
-      {
-        newFunction = base.VisitFunction((Function) node.Clone());
-        if (OldToNewFunctionMap != null)
-        {
-          OldToNewFunctionMap[node] = newFunction;
-        }
-      }
-
-      return newFunction;
+      return base.VisitFunction((Function) node.Clone());
     }
 
     public override GlobalVariable VisitGlobalVariable(GlobalVariable node)
@@ -429,13 +438,7 @@ namespace Microsoft.Boogie
     {
       //Contract.Requires(node != null);
       Contract.Ensures(Contract.Result<Expr>() != null);
-      var result = (NAryExpr) base.VisitNAryExpr((NAryExpr) node.Clone());
-      if (node.Fun is FunctionCall functionCall)
-      {
-        result.Fun =
-          new FunctionCall(VisitFunction(functionCall.Func));
-      }
-      return result;
+      return (NAryExpr)base.VisitNAryExpr((NAryExpr)node.Clone());
     }
 
     public override Expr VisitOldExpr(OldExpr node)
@@ -487,7 +490,7 @@ namespace Microsoft.Boogie
       // call the right Procedure.
       // The map below is used to achieve this.
       OldToNewProcedureMap = new Dictionary<Procedure, Procedure>();
-      OldToNewFunctionMap = new Dictionary<Function, Function>();
+      OldToNewAxiomMap = new Dictionary<Axiom, Axiom>();
       var newProgram = base.VisitProgram((Program) node.Clone());
 
       // We need to make sure that CallCmds get resolved to call Procedures we duplicated
@@ -497,10 +500,24 @@ namespace Microsoft.Boogie
       {
         callCmd.Proc = OldToNewProcedureMap[callCmd.Proc];
       }
-      // TODO: Do something about function calls?
+
+      /*foreach (var function in newProgram.Functions)
+      {
+        function.otherDefinitionAxioms =
+          function.otherDefinitionAxioms?.Select(axiom => axiom == null ? null : OldToNewAxiomMap[axiom]).ToList();
+        function.DefinitionAxiom = function.DefinitionAxiom == null ? null : 
+          OldToNewAxiomMap[function.DefinitionAxiom];
+      }
+      
+      foreach (var constant in newProgram.Constants)
+      {
+        constant.DefinitionAxioms = constant.DefinitionAxioms
+          ?.Select(axiom => axiom == null ? null : OldToNewAxiomMap[axiom])
+          .ToList();
+      }*/
 
       OldToNewProcedureMap = null; // This Visitor could be used for other things later so remove the map.
-      OldToNewFunctionMap = null;
+      OldToNewAxiomMap = null;
       return newProgram;
     }
 
