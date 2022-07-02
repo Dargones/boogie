@@ -10,6 +10,7 @@ namespace Microsoft.Boogie
     // and that Implementation.Proc is resolved to the correct duplicated
     // Procedure.
     private Dictionary<Procedure, Procedure> OldToNewProcedureMap = null;
+    private Dictionary<Function, Function> OldToNewFunctionMap = null;
 
     public override Absy Visit(Absy node)
     {
@@ -298,7 +299,21 @@ namespace Microsoft.Boogie
     {
       //Contract.Requires(node != null);
       Contract.Ensures(Contract.Result<Function>() != null);
-      return base.VisitFunction((Function) node.Clone());
+      Function newFunction = null;
+      if (OldToNewFunctionMap != null && OldToNewFunctionMap.ContainsKey(node))
+      {
+        newFunction = OldToNewFunctionMap[node];
+      }
+      else
+      {
+        newFunction = base.VisitFunction((Function) node.Clone());
+        if (OldToNewFunctionMap != null)
+        {
+          OldToNewFunctionMap[node] = newFunction;
+        }
+      }
+
+      return newFunction;
     }
 
     public override GlobalVariable VisitGlobalVariable(GlobalVariable node)
@@ -414,7 +429,13 @@ namespace Microsoft.Boogie
     {
       //Contract.Requires(node != null);
       Contract.Ensures(Contract.Result<Expr>() != null);
-      return base.VisitNAryExpr((NAryExpr) node.Clone());
+      var result = (NAryExpr) base.VisitNAryExpr((NAryExpr) node.Clone());
+      if (node.Fun is FunctionCall functionCall)
+      {
+        result.Fun =
+          new FunctionCall(VisitFunction(functionCall.Func));
+      }
+      return result;
     }
 
     public override Expr VisitOldExpr(OldExpr node)
@@ -466,6 +487,7 @@ namespace Microsoft.Boogie
       // call the right Procedure.
       // The map below is used to achieve this.
       OldToNewProcedureMap = new Dictionary<Procedure, Procedure>();
+      OldToNewFunctionMap = new Dictionary<Function, Function>();
       var newProgram = base.VisitProgram((Program) node.Clone());
 
       // We need to make sure that CallCmds get resolved to call Procedures we duplicated
@@ -475,8 +497,10 @@ namespace Microsoft.Boogie
       {
         callCmd.Proc = OldToNewProcedureMap[callCmd.Proc];
       }
+      // TODO: Do something about function calls?
 
       OldToNewProcedureMap = null; // This Visitor could be used for other things later so remove the map.
+      OldToNewFunctionMap = null;
       return newProgram;
     }
 
