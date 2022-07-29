@@ -1549,7 +1549,7 @@ namespace Microsoft.Boogie
     public Cmd(IToken /*!*/ tok)
       : base(tok)
     {
-      Contract.Assert(tok != null);
+      
     }
 
     public abstract void Emit(TokenTextWriter /*!*/ stream, int level);

@@ -1321,7 +1321,7 @@ namespace Microsoft.Boogie.SMTLib
 
     protected Model ParseErrorModel(SExpr resp)
     {
-      if (resp is null || resp.Name.Contains("error")) {
+      if (resp is null || resp.Name == "error") {
         return null;
       }
 
