@@ -274,6 +274,8 @@ namespace Microsoft.Boogie
   /// </summary>
   public class CommandLineOptions : CommandLineOptionEngine, ExecutionEngineOptions
   {
+
+    public static CommandLineOptions Clo = new CommandLineOptions(new ConsolePrinter());
     public static CommandLineOptions FromArguments(params string[] arguments)
     {
       return FromArguments(new ConsolePrinter(), arguments);

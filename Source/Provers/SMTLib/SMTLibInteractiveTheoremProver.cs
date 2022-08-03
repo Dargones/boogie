@@ -468,7 +468,7 @@ namespace Microsoft.Boogie.SMTLib
       return CheckSatAndGetResponse(cancellationToken);
     }
 
-    private async Task<string[]> CalculatePath(int controlFlowConstant, CancellationToken cancellationToken)
+    public async Task<string[]> CalculatePath(int controlFlowConstant, CancellationToken cancellationToken)
     {
       var path = new List<string>();
       string v = "0";

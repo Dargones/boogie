@@ -145,7 +145,7 @@ namespace Microsoft.Boogie
       }
     }
 
-    protected void ProcessImplementation(Program program, Implementation impl)
+    public void ProcessImplementation(Program program, Implementation impl)
     {
       Contract.Requires(impl != null);
       Contract.Requires(impl.Proc != null);
@@ -194,6 +194,14 @@ namespace Microsoft.Boogie
       Contract.Requires(program != null);
       Contract.Requires(impl.Proc != null);
       var inliner = new Inliner(program, null, -1, options);
+      ProcessImplementation(program, impl, inliner);
+    }
+    
+    public static void ProcessImplementation(Program program, Implementation impl, Inliner inliner)
+    {
+      Contract.Requires(impl != null);
+      Contract.Requires(program != null);
+      Contract.Requires(impl.Proc != null);
       inliner.ProcessImplementation(program, impl);
     }
 

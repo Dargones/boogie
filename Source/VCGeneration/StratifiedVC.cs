@@ -347,6 +347,7 @@ namespace VC
 
   public class StratifiedInliningInfo
   {
+    public ControlFlowIdMap<Absy> absyIds = new();
     private VCGenOptions options;
     public StratifiedVCGenBase vcgen;
     public ImplementationRun run;
@@ -653,7 +654,7 @@ namespace VC
         PassiveImplInstrumentation(Implementation);
       }
 
-      var absyIds = new ControlFlowIdMap<Absy>();
+      absyIds = new ControlFlowIdMap<Absy>();
       
       VCGen.CodeExprConversionClosure cc = new VCGen.CodeExprConversionClosure(run.TraceWriter, options, absyIds, proverInterface.Context);
       translator.SetCodeExprConverter(cc.CodeExprToVerificationCondition);
