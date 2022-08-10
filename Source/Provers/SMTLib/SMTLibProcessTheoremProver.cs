@@ -31,7 +31,7 @@ namespace Microsoft.Boogie.SMTLib
     protected StringBuilder common = new();
     protected string CachedCommon = null;
     protected TextWriter currentLogFile;
-    protected volatile ErrorHandler currentErrorHandler;
+    public volatile ErrorHandler currentErrorHandler;
     
     [ContractInvariantMethod]
     private void ObjectInvariant()
