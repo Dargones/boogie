@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Boogie.SMTLib;
 
-class NoopSolver : SMTLibSolver
+public class NoopSolver : SMTLibSolver
 {
 #pragma warning disable CS0067
   public override event Action<string> ErrorHandler;
@@ -15,7 +15,7 @@ class NoopSolver : SMTLibSolver
   {
   }
 
-  private readonly Queue<SExpr> responses = new();
+  protected readonly Queue<SExpr> responses = new();
 
   public override void Send(string cmd)
   {
@@ -55,7 +55,7 @@ class NoopSolver : SMTLibSolver
     return result;
   }
 
-  private Task<SExpr> GetProverResponse()
+  protected virtual Task<SExpr> GetProverResponse()
   {
     return Task.FromResult(responses.Count > 0 ? responses.Dequeue() : null);
   }

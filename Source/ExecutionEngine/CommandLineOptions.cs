@@ -4,6 +4,7 @@ using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
+using Microsoft.Boogie.SMTLib;
 using VC;
 
 namespace Microsoft.Boogie
@@ -440,6 +441,15 @@ namespace Microsoft.Boogie
       get => normalizeNames;
       set => normalizeNames = value;
     }
+
+    public Func<SMTLibOptions, SMTLibSolverOptions, SMTLibSolver> CreateSolver { get; set; } = (libOptions, options) =>
+    {
+      return options.Solver switch
+      {
+        SolverKind.NoOpWithZ3Options => new NoopSolver(),
+        _ => new SMTLibProcess(libOptions, options)
+      };
+    };
 
     public bool NormalizeDeclarationOrder
     {
@@ -1773,6 +1783,14 @@ namespace Microsoft.Boogie
        Set the random seed for verifying a given implementation.
        Has the same effect as setting /randomSeed but only for a single implementation.
 
+     {:verboseName <string>}
+       Set the name to use when printing messages about verification
+       status in `/trace` and selecting procedures to verify with
+       `/proc`. There are no restrictions on the characters used in the
+       string, so it can be particularly useful as a way of describing
+       the original name of an identifier translated into Boogie from
+       some other source language.
+
   ---- On Axioms -------------------------------------------------------------
 
     {:include_dep}
@@ -1868,7 +1886,6 @@ namespace Microsoft.Boogie
        Used on a command.  Adds the expression e, after substituting variables
        with their incarnations just before the command, to pool name.
 
-     {:skolem_add_to_pool ""name"", e}
        Used on a quantifier.  Adds the expression e, after substituting the
        bound variables with fresh skolem constants, whenever the quantifier is
        skolemized.

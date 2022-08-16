@@ -1214,8 +1214,7 @@ namespace Microsoft.Boogie
 
     public IEnumerable<Block> Exits()
     {
-      GotoCmd g = TransferCmd as GotoCmd;
-      if (g != null)
+      if (TransferCmd is GotoCmd g)
       {
         return cce.NonNull(g.labelTargets);
       }
@@ -2342,6 +2341,79 @@ namespace Microsoft.Boogie
       //Contract.Requires(visitor != null);
       Contract.Ensures(Contract.Result<Absy>() != null);
       return visitor.VisitMapAssignLhs(this);
+    }
+  }
+
+  public class FieldAssignLhs : AssignLhs
+  {
+    public AssignLhs Datatype;
+
+    public FieldAccess FieldAccess;
+
+    public TypeParamInstantiation TypeParameters = null;
+
+    private Type TypeAttr = null;
+
+    public override Type Type => TypeAttr;
+
+    public override IdentifierExpr DeepAssignedIdentifier => Datatype.DeepAssignedIdentifier;
+
+    public override Variable DeepAssignedVariable => Datatype.DeepAssignedVariable;
+
+    public FieldAssignLhs(IToken tok, AssignLhs datatype, FieldAccess fieldAccess)
+      : base(tok)
+    {
+      Datatype = datatype;
+      this.FieldAccess = fieldAccess;
+    }
+
+    public override void Resolve(ResolutionContext rc)
+    {
+      Datatype.Resolve(rc);
+    }
+
+    public override void Typecheck(TypecheckingContext tc)
+    {
+      Datatype.Typecheck(tc);
+      TypeParameters = SimpleTypeParamInstantiation.EMPTY;
+      if (Datatype.Type != null)
+      {
+        TypeAttr = FieldAccess.Typecheck(Datatype.Type, tc, out TypeParameters);
+      }
+    }
+
+    public override void Emit(TokenTextWriter stream)
+    {
+      Datatype.Emit(stream);
+      stream.Write("->{0}", FieldAccess.FieldName);
+    }
+
+    public override Expr AsExpr
+    {
+      get
+      {
+        var res = FieldAccess.Select(tok, Datatype.AsExpr);
+        Contract.Assert(res != null);
+        res.TypeParameters = this.TypeParameters;
+        res.Type = this.Type;
+        return res;
+      }
+    }
+
+    internal override void AsSimpleAssignment(Expr rhs,
+      out IdentifierExpr simpleLhs,
+      out Expr simpleRhs)
+    {
+      var newRhs = FieldAccess.Update(tok, Datatype.AsExpr, rhs);
+      Contract.Assert(newRhs != null);
+      newRhs.TypeParameters = this.TypeParameters;
+      newRhs.Type = Datatype.Type;
+      Datatype.AsSimpleAssignment(newRhs, out simpleLhs, out simpleRhs);
+    }
+
+    public override Absy StdDispatch(StandardVisitor visitor)
+    {
+      return visitor.VisitFieldAssignLhs(this);
     }
   }
 

@@ -678,7 +678,7 @@ namespace Microsoft.Boogie.VCExprAST
         QKeyValue.FindIntAttribute(node.Attributes, "weight", 1), 
         Enumerable.Range(0, boundVars.Count)
           .ToDictionary(x => boundVars[x], x => QuantifierInstantiationEngine.FindInstantiationHints(node.Dummies[x])),
-        QuantifierInstantiationEngine.FindInstantiationSources(node, "skolem_add_to_pool", this));
+        QuantifierInstantiationEngine.FindInstantiationSources(node, "add_to_pool", this));
     }
 
     private string GetQid(QuantifierExpr node)
@@ -1409,6 +1409,12 @@ namespace Microsoft.Boogie.VCExprAST
       //Contract.Requires(ite != null);
       Contract.Ensures(Contract.Result<VCExpr>() != null);
       return Gen.Function(VCExpressionGenerator.IfThenElseOp, this.args);
+    }
+    
+    public VCExpr Visit(FieldAccess fieldAccess)
+    {
+      Contract.Ensures(Contract.Result<VCExpr>() != null);
+      return Gen.Function(fieldAccess.Selector, this.args);
     }
 
     ///////////////////////////////////////////////////////////////////////////////
