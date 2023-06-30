@@ -608,7 +608,7 @@ namespace Microsoft.Boogie
       public Element Result;
       public readonly Element[] Args;
 
-      internal FuncTuple(Func func, Element res, Element[] args)
+      public FuncTuple(Func func, Element res, Element[] args)
       {
         if (args == null)
         {
